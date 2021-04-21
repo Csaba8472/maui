@@ -10,6 +10,7 @@ using Microsoft.Maui.Controls.Compatibility.Platform.Android.AppLinks;
 using Microsoft.Maui.Controls.Internals;
 using System.Threading.Tasks;
 using System.Net.Http;
+using Microsoft.Maui.Handlers;
 
 namespace Microsoft.Maui.Controls.Compatibility.ControlGallery.Android
 {
