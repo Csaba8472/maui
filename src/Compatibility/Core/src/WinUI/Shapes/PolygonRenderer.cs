@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Microsoft.Maui.Controls.Shapes;
 using System.Collections.Specialized;
+using Microsoft.Maui.Controls.Platform;
 
 #if WINDOWS_UWP
 using WFillRule = Microsoft.UI.Xaml.Media.FillRule;

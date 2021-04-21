@@ -1,4 +1,5 @@
 using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Controls.Platform;
 
 #if WINDOWS_UWP
 using WEllipse = Microsoft.UI.Xaml.Shapes.Ellipse;

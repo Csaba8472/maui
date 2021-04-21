@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using Shape = Microsoft.Maui.Controls.Shapes.Shape;
 using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Controls.Platform;
 
 #if WINDOWS_UWP
 using Microsoft.UI.Xaml;

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Path = Microsoft.Maui.Controls.Shapes.Path;
+using Microsoft.Maui.Controls.Platform;
 
 #if WINDOWS_UWP
 using WPath = Microsoft.UI.Xaml.Shapes.Path;

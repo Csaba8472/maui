@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Microsoft.Maui.Controls.Platform;
 using FormsRectangle = Microsoft.Maui.Controls.Shapes.Rectangle;
 
 #if WINDOWS_UWP

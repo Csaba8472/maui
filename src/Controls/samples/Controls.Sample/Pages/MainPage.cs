@@ -13,6 +13,14 @@ using Debug = System.Diagnostics.Debug;
 
 namespace Maui.Controls.Sample.Pages
 {
+	public class NavPage : NavigationPage
+	{
+		public NavPage(IServiceProvider services, MainPageViewModel viewModel) :
+			base(new MainPage(services, viewModel))
+		{
+		}
+	}
+
 	public class MainPage : BasePage
 	{
 		readonly IServiceProvider _services;
@@ -57,6 +65,15 @@ namespace Maui.Controls.Sample.Pages
 			SemanticProperties.SetHeadingLevel((BindableObject)verticalStack.Children.Last(), SemanticHeadingLevel.Level1);
 			verticalStack.Add(new Label { Text = "This should be BOLD text!", FontAttributes = FontAttributes.Bold, HorizontalOptions = LayoutOptions.Center });
 			verticalStack.Add(new Label { Text = "This should be a CUSTOM font!", FontFamily = "Dokdo" });
+			verticalStack.Add(
+				new Button { 
+					Text = "Push a Page", 
+					Command = new Command(async () =>
+					{
+						await Navigation.PushAsync(new SemanticsPage());
+					})
+				}
+			);
 
 
 #if __ANDROID__

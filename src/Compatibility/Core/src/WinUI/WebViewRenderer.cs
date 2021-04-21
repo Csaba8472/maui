@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.UI.Xaml.Controls;
 using WWebView = Microsoft.UI.Xaml.Controls.WebView2;
+using Microsoft.Maui.Controls.Platform;
 
 //TODO WINUI3
 //using WWebViewExecutionMode = Microsoft.UI.Xaml.Controls.WebViewExecutionMode;
