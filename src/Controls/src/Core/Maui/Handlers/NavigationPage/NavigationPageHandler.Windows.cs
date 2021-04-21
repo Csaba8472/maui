@@ -56,9 +56,6 @@ namespace Microsoft.Maui.Controls.Handlers
 		EntranceThemeTransition _transition;
 		bool _parentsLookedUp = false;
 
-		//TODO MAUI: SystemNavigationManager only has meaning for UWP
-		//SystemNavigationManager _navManager;
-
 		public void BindForegroundColor(AppBar appBar)
 		{
 			SetAppBarForegroundBinding(appBar);
@@ -360,8 +357,8 @@ namespace Microsoft.Maui.Controls.Handlers
 			if (e.PropertyName == "CurrentPage" || e.PropertyName == "Detail")
 			{
 				UpdateTitleOnParents();
-				MapTitleIcon(this, VirtualView);
-				MapTitleView(this, VirtualView);
+				UpdateTitleIcon();
+				UpdateTitleView();
 			}
 		}
 
@@ -387,9 +384,9 @@ namespace Microsoft.Maui.Controls.Handlers
 			else if (e.PropertyName == Page.TitleProperty.PropertyName)
 				UpdateTitleOnParents();
 			else if (e.PropertyName == NavigationPage.TitleIconImageSourceProperty.PropertyName)
-				MapTitleIcon(this, VirtualView);
+				UpdateTitleIcon();
 			else if (e.PropertyName == NavigationPage.TitleViewProperty.PropertyName)
-				MapTitleView(this, VirtualView);
+				UpdateTitleView();
 		}
 
 		void OnElementAppearing(object sender, EventArgs e)
@@ -403,15 +400,14 @@ namespace Microsoft.Maui.Controls.Handlers
 			if (VirtualView == null)
 				return;
 
-			//_navManager = SystemNavigationManager.GetForCurrentView();
 			VirtualView.SendAppearing();
 			UpdateBackButton();
 			UpdateTitleOnParents();
 
 			if (_parentFlyoutPage != null)
 			{
-				MapTitleView(this, VirtualView);
-				MapTitleIcon(this, VirtualView);
+				UpdateTitleView();
+				UpdateTitleIcon();
 			}
 		}
 
@@ -499,7 +495,7 @@ namespace Microsoft.Maui.Controls.Handlers
 
 			UpdateTitleVisible();
 			UpdateTitleOnParents();
-			MapTitleView(this, VirtualView);
+			UpdateTitleView();
 
 			SetupPageTransition(_transition, isAnimated, isPopping);
 
@@ -569,13 +565,23 @@ namespace Microsoft.Maui.Controls.Handlers
 
 		void UpdateBackButton()
 		{
-			if (/*_navManager == null ||*/ _currentPage == null)
+			if (_currentPage == null)
 			{
 				return;
 			}
 
 			bool showBackButton = VirtualView.InternalChildren.Count > 1 && NavigationPage.GetHasBackButton(_currentPage);
-			//_navManager.AppViewBackButtonVisibility = showBackButton ? AppViewBackButtonVisibility.Visible : AppViewBackButtonVisibility.Collapsed;
+			if (NativeVersion.IsDesktop)
+			{
+				//TODO MAUI: this means it's running as a desktop app
+			}
+			else
+			{
+				var navManager = SystemNavigationManager.GetForCurrentView();
+				if(navManager != null)
+					navManager.AppViewBackButtonVisibility = showBackButton ? AppViewBackButtonVisibility.Visible : AppViewBackButtonVisibility.Collapsed;
+			}
+
 			NativeView.SetBackButtonTitle(VirtualView);
 		}
 
@@ -621,78 +627,100 @@ namespace Microsoft.Maui.Controls.Handlers
 			}
 		}
 
-		public static void MapPadding(NavigationPageHandler handler, NavigationPage view)
+		void UpdatePadding()
 		{
-			handler.NativeView.TitleInset = view.Padding.Left;
+			NativeView.TitleInset = VirtualView.Padding.Left;
 		}
 
-		public static void MapTitleColor(NavigationPageHandler handler, NavigationPage view)
+		void UpdateTitleColor()
 		{
-			(handler as ITitleProvider).BarForegroundBrush = GetBarForegroundBrush(view);
+			(this as ITitleProvider).BarForegroundBrush = GetBarForegroundBrush(VirtualView);
 		}
 
-		public static void MapNavigationBarBackground(NavigationPageHandler handler, NavigationPage view)
+		void UpdateNavigationBarBackground()
 		{
-			(handler as ITitleProvider).BarBackgroundBrush = GetBarBackgroundBrush(view);
+			(this as ITitleProvider).BarBackgroundBrush = GetBarBackgroundBrush(VirtualView);
 		}
 
-		// TODO MAUI: Task Based Mappers?
-		public static async void MapTitleIcon(NavigationPageHandler handler, NavigationPage view)
+		void UpdateTitleIcon() =>
+			UpdateTitleIconAsync()
+				.FireAndForget(errorCallback: (e) => Log.Warning(nameof(TitleIcon), $"{e}"));
+
+		async Task UpdateTitleIconAsync()
 		{
-			if (handler._currentPage == null)
+			var page = _currentPage;
+			if (page == null)
 				return;
 
-			ImageSource source = NavigationPage.GetTitleIconImageSource(handler._currentPage);
+			ImageSource source = NavigationPage.GetTitleIconImageSource(page);
 
-			handler.TitleIcon = await source.ToWindowsImageSourceAsync();
-			handler.NativeView.TitleIcon = handler.TitleIcon;
+			TitleIcon = await source.ToWindowsImageSourceAsync();
 
-			// TODO MAUI Flyout Page
-			//if (_parentFlyoutPage != null && Platform.GetRenderer(_parentFlyoutPage) is ITitleIconProvider parent)
-			//	parent.TitleIcon = _titleIcon;
+			if (NativeView == null || _currentPage != page)
+				return;
 
-			handler.NativeView.UpdateLayout();
-			handler.UpdateContainerArea();
+			NativeView.TitleIcon = TitleIcon;
+
+			if (_parentFlyoutPage != null && this is ITitleIconProvider parent)
+				parent.TitleIcon = TitleIcon;
+
+			NativeView.UpdateLayout();
+			UpdateContainerArea();
 		}
 
-		public static void MapTitleView(NavigationPageHandler handler, NavigationPage view)
+		void UpdateTitleView()
 		{
 			// if the life cycle hasn't reached the point where _parentFlyoutPage gets wired up then 
 			// don't update the title view
-			if (handler._currentPage == null || !handler._parentsLookedUp)
+			if (_currentPage == null || !_parentsLookedUp)
 				return;
 
 			// If the container TitleView gets initialized before the FP TitleView it causes the 
 			// FP TitleView to not render correctly
-			if (handler._parentFlyoutPage != null)
+			if (_parentFlyoutPage != null)
 			{
-				// TODO MAUI FLYOUT PAGE
-				//if (Platform.GetRenderer(_parentFlyoutPage) is ITitleViewProvider parent)
-				//	parent.TitleView = TitleView;
+				if (this is ITitleViewProvider parent)
+					parent.TitleView = TitleView;
 			}
-			else if (handler._parentFlyoutPage == null)
-				handler.NativeView.TitleView = handler.TitleView;
+			else if (_parentFlyoutPage == null)
+				NativeView.TitleView = TitleView;
 
 		}
 
-		public static void MapToolbarPlacement(NavigationPageHandler handler, NavigationPage view)
+		void UpdateToolbarPlacement()
 		{
-			if (handler.NativeView == null)
+			if (NativeView == null)
 			{
 				return;
 			}
 
-			handler.NativeView.ToolbarPlacement = view.OnThisPlatform().GetToolbarPlacement();
+			NativeView.ToolbarPlacement = VirtualView.OnThisPlatform().GetToolbarPlacement();
 		}
 
-		public static void MapToolbarDynamicOverflowEnabled(NavigationPageHandler handler, NavigationPage view)
+		void UpdateToolbarDynamicOverflowEnabled()
 		{
-			if (handler.NativeView == null)
+			if (NativeView == null)
 			{
 				return;
 			}
 
-			handler.NativeView.ToolbarDynamicOverflowEnabled = view.OnThisPlatform().GetToolbarDynamicOverflowEnabled();
+			NativeView.ToolbarDynamicOverflowEnabled = VirtualView.OnThisPlatform().GetToolbarDynamicOverflowEnabled();
 		}
+
+		public static void MapPadding(NavigationPageHandler handler, NavigationPage view) =>
+			handler.UpdatePadding();
+
+		public static void MapTitleColor(NavigationPageHandler handler, NavigationPage view) => handler.UpdateTitleColor();
+
+		public static void MapNavigationBarBackground(NavigationPageHandler handler, NavigationPage view) => handler.UpdateNavigationBarBackground();
+
+		// TODO MAUI: Task Based Mappers?
+		public static void MapTitleIcon(NavigationPageHandler handler, NavigationPage view) => handler.UpdateTitleIcon();
+
+		public static void MapTitleView(NavigationPageHandler handler, NavigationPage view) => handler.UpdateTitleView();
+
+		public static void MapToolbarPlacement(NavigationPageHandler handler, NavigationPage view) => handler.UpdateToolbarPlacement();
+
+		public static void MapToolbarDynamicOverflowEnabled(NavigationPageHandler handler, NavigationPage view) => handler.UpdateToolbarDynamicOverflowEnabled();
 	}
 }

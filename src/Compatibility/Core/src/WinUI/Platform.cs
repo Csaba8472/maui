@@ -147,11 +147,11 @@ namespace Microsoft.Maui.Controls.Compatibility.Platform.UWP
 			UpdateBounds();
 
 			InitializeStatusBar();
-						
-			// TODO WINUI
-			//SystemNavigationManager.GetForCurrentView().BackRequested += OnBackRequested;
+				
+			if(!NativeVersion.IsDesktop)
+				SystemNavigationManager.GetForCurrentView().BackRequested += OnBackRequested;
 
-			// TODO WINUI
+			// TODO WINUI: This event is only available on UWP
 			// Microsoft.UI.Xaml.Application.Current.Resuming += OnResumingAsync;
 		}
 
