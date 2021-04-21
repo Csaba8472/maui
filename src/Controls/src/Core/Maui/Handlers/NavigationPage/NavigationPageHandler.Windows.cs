@@ -25,9 +25,25 @@ namespace Microsoft.Maui.Controls.Handlers
 		ViewHandler<NavigationPage, PageControl>, ITitleProvider, ITitleIconProvider, 
 		ITitleViewProvider, IToolbarProvider, IToolBarForegroundBinder, IViewHandler
 	{
-		public NavigationPageHandler() : base(ViewHandler.ViewMapper)
-		{
+		// Shane will move this once he starts working on other platforms :-)
+		public static PropertyMapper<NavigationPage, NavigationPageHandler> NavigationPageMapper
+			= new PropertyMapper<NavigationPage, NavigationPageHandler>(ViewHandler.ViewMapper)
+			{
+				[NavigationPage.BarTextColorProperty.PropertyName] = MapTitleColor,
+				[NavigationPage.BarBackgroundColorProperty.PropertyName] = MapNavigationBarBackground,
+				[NavigationPage.BarBackgroundProperty.PropertyName] = MapNavigationBarBackground,
+				[nameof(IPadding.Padding)] = MapPadding,
+				[nameof(NavigationPage.TitleIconImageSourceProperty.PropertyName)] = MapTitleIcon,
+				[nameof(NavigationPage.TitleViewProperty.PropertyName)] = MapTitleView,
 
+#if WINDOWS
+				[nameof(ToolbarPlacementProperty.PropertyName)] = MapToolbarPlacement,
+				[nameof(ToolbarDynamicOverflowEnabledProperty.PropertyName)] = MapToolbarDynamicOverflowEnabled,
+#endif
+			};
+
+		public NavigationPageHandler() : base(NavigationPageMapper)
+		{
 		}
 
 		Page _currentPage;
@@ -39,6 +55,19 @@ namespace Microsoft.Maui.Controls.Handlers
 		VisualElementTracker<Page, PageControl> _tracker;
 		EntranceThemeTransition _transition;
 		bool _parentsLookedUp = false;
+
+		//TODO MAUI: SystemNavigationManager only has meaning for UWP
+		//SystemNavigationManager _navManager;
+
+		public void BindForegroundColor(AppBar appBar)
+		{
+			SetAppBarForegroundBinding(appBar);
+		}
+
+		public void BindForegroundColor(AppBarButton button)
+		{
+			SetAppBarForegroundBinding(button);
+		}
 
 		protected VisualElementTracker<Page, PageControl> Tracker
 		{
@@ -59,6 +88,12 @@ namespace Microsoft.Maui.Controls.Handlers
 		//{
 		//	Dispose(true);
 		//}
+
+		void SetAppBarForegroundBinding(FrameworkElement element)
+		{
+			element.SetBinding(Control.ForegroundProperty,
+				new Microsoft.UI.Xaml.Data.Binding { Path = new PropertyPath("TitleBrush"), Source = NativeView, RelativeSource = new RelativeSource { Mode = RelativeSourceMode.TemplatedParent } });
+		}
 
 		WBrush ITitleProvider.BarBackgroundBrush
 		{
@@ -184,7 +219,7 @@ namespace Microsoft.Maui.Controls.Handlers
 			NativeView.PointerPressed += OnPointerPressed;
 			NativeView.SizeChanged += OnNativeSizeChanged;
 			Tracker = new BackgroundTracker<PageControl>(Control.BackgroundProperty) 
-			{ 
+			{
 				Element = VirtualView, 
 				Container = NativeView 
 			};
@@ -196,28 +231,14 @@ namespace Microsoft.Maui.Controls.Handlers
 
 			NativeView.DataContext = VirtualView.CurrentPage;
 
-
 			// Move this somewhere else
-			UpdatePadding();
 			LookupRelevantParents();
-			UpdateTitleColor();
-
-			if (Brush.IsNullOrEmpty(VirtualView.BarBackground))
-				UpdateNavigationBarBackgroundColor();
-			else
-				UpdateNavigationBarBackground();
-
-			UpdateToolbarPlacement();
-			UpdateToolbarDynamicOverflowEnabled();
-			UpdateTitleIcon();
-			UpdateTitleView();
 
 			// Enforce consistency rules on toolbar (show toolbar if top-level page is Navigation Page)
 			NativeView.ShouldShowToolbar = _parentFlyoutPage == null && _parentTabbedPage == null;
 			if (_parentTabbedPage != null)
 				VirtualView.Appearing += OnElementAppearing;
 
-			VirtualView.PropertyChanged += OnElementPropertyChanged;
 			VirtualView.PushRequested += OnPushRequested;
 			VirtualView.PopRequested += OnPopRequested;
 			VirtualView.PopToRootRequested += OnPopToRootRequested;
@@ -240,7 +261,6 @@ namespace Microsoft.Maui.Controls.Handlers
 			VirtualView.PopRequested -= OnPopRequested;
 			VirtualView.PopToRootRequested -= OnPopToRootRequested;
 			VirtualView.InternalChildren.CollectionChanged -= OnChildrenChanged;
-			VirtualView.PropertyChanged -= OnElementPropertyChanged;
 			NativeView.PointerPressed -= OnPointerPressed;
 			NativeView.SizeChanged -= OnNativeSizeChanged;
 			NativeView.Loaded -= OnLoaded;
@@ -267,81 +287,6 @@ namespace Microsoft.Maui.Controls.Handlers
 				_parentFlyoutPage.PropertyChanged -= MultiPagePropertyChanged;
 		}
 
-
-		//public void SetElement(VisualElement element)
-		//{
-		//	//if (element != null && !(element is NavigationPage))
-		//	//	throw new ArgumentException("VirtualView must be a Page", nameof(element));
-
-		//	//NavigationPage oldElement = VirtualView;
-		//	//VirtualView = (NavigationPage)element;
-
-		//	//if (VirtualView != null && VirtualView.CurrentPage is null)
-		//	//	throw new InvalidOperationException(
-		//	//		"NavigationPage must have a root Page before being used. Either call PushAsync with a valid Page, or pass a Page to the constructor before usage.");
-
-		//	//if (oldElement != null)
-		//	//{
-		//	//	oldElement.PushRequested -= OnPushRequested;
-		//	//	oldElement.PopRequested -= OnPopRequested;
-		//	//	oldElement.PopToRootRequested -= OnPopToRootRequested;
-		//	//	oldElement.InternalChildren.CollectionChanged -= OnChildrenChanged;
-		//	//	oldElement.PropertyChanged -= OnElementPropertyChanged;
-		//	//}
-
-		//	if (element != null)
-		//	{
-		//		if (NativeView == null)
-		//		{
-		//			//NativeView = new PageControl();
-		//			//NativeView.PointerPressed += OnPointerPressed;
-		//			//NativeView.SizeChanged += OnNativeSizeChanged;
-
-		//			///Tracker = new BackgroundTracker<PageControl>(Control.BackgroundProperty) { VirtualView = (Page)element, Container = NativeView };
-
-		//			//SetPage(VirtualView.CurrentPage, false, false);
-
-		//			//NativeView.Loaded += OnLoaded;
-		//			//NativeView.Unloaded += OnUnloaded;
-		//		}
-
-		//		//NativeView.DataContext = VirtualView.CurrentPage;
-
-		//		UpdatePadding();
-		//		LookupRelevantParents();
-		//		UpdateTitleColor();
-
-		//		if (Brush.IsNullOrEmpty(VirtualView.BarBackground))
-		//			UpdateNavigationBarBackgroundColor();
-		//		else
-		//			UpdateNavigationBarBackground();
-
-		//		UpdateToolbarPlacement();
-		//		UpdateToolbarDynamicOverflowEnabled();
-		//		UpdateTitleIcon();
-		//		UpdateTitleView();
-
-		//		// Enforce consistency rules on toolbar (show toolbar if top-level page is Navigation Page)
-		//		NativeView.ShouldShowToolbar = _parentFlyoutPage == null && _parentTabbedPage == null;
-		//		if (_parentTabbedPage != null)
-		//			VirtualView.Appearing += OnElementAppearing;
-
-		//		VirtualView.PropertyChanged += OnElementPropertyChanged;
-		//		VirtualView.PushRequested += OnPushRequested;
-		//		VirtualView.PopRequested += OnPopRequested;
-		//		VirtualView.PopToRootRequested += OnPopToRootRequested;
-		//		VirtualView.InternalChildren.CollectionChanged += OnChildrenChanged;
-
-		//		if (!string.IsNullOrEmpty(VirtualView.AutomationId))
-		//			NativeView.SetValue(Microsoft.UI.Xaml.Automation.AutomationProperties.AutomationIdProperty, VirtualView.AutomationId);
-
-		//		PushExistingNavigationStack();
-		//	}
-
-		//	OnElementChanged(new VisualElementChangedEventArgs(oldElement, element));
-		//}
-
-
 		protected virtual void OnElementChanged(VisualElementChangedEventArgs e)
 		{
 			EventHandler<VisualElementChangedEventArgs> changed = ElementChanged;
@@ -358,9 +303,9 @@ namespace Microsoft.Maui.Controls.Handlers
 			return VirtualView.BarBackgroundColor.ToBrush();
 		}
 
-		WBrush GetBarBackgroundBrush()
+		static WBrush GetBarBackgroundBrush(NavigationPage navigationPage)
 		{
-			var barBackground = VirtualView.BarBackground;
+			var barBackground = navigationPage.BarBackground;
 			object defaultColor = GetDefaultColor();
 
 			if (!Brush.IsNullOrEmpty(barBackground))
@@ -372,12 +317,12 @@ namespace Microsoft.Maui.Controls.Handlers
 			return null;
 		}
 
-		WBrush GetBarForegroundBrush()
+		static WBrush GetBarForegroundBrush(NavigationPage navigationPage)
 		{
 			object defaultColor = Microsoft.UI.Xaml.Application.Current.Resources["ApplicationForegroundThemeBrush"];
-			if (VirtualView.BarTextColor.IsDefault())
+			if (navigationPage.BarTextColor.IsDefault())
 				return (WBrush)defaultColor;
-			return VirtualView.BarTextColor.ToBrush();
+			return navigationPage.BarTextColor.ToBrush();
 		}
 
 		bool GetIsNavBarPossible()
@@ -415,8 +360,8 @@ namespace Microsoft.Maui.Controls.Handlers
 			if (e.PropertyName == "CurrentPage" || e.PropertyName == "Detail")
 			{
 				UpdateTitleOnParents();
-				UpdateTitleIcon();
-				UpdateTitleView();
+				MapTitleIcon(this, VirtualView);
+				MapTitleView(this, VirtualView);
 			}
 		}
 
@@ -430,6 +375,7 @@ namespace Microsoft.Maui.Controls.Handlers
 			UpdateBackButton();
 		}
 
+		// TODO MAUI: hmmmmmm can we make this not be property changed based?
 		void OnCurrentPagePropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
 			if (e.PropertyName == NavigationPage.HasBackButtonProperty.PropertyName)
@@ -441,35 +387,15 @@ namespace Microsoft.Maui.Controls.Handlers
 			else if (e.PropertyName == Page.TitleProperty.PropertyName)
 				UpdateTitleOnParents();
 			else if (e.PropertyName == NavigationPage.TitleIconImageSourceProperty.PropertyName)
-				UpdateTitleIcon();
+				MapTitleIcon(this, VirtualView);
 			else if (e.PropertyName == NavigationPage.TitleViewProperty.PropertyName)
-				UpdateTitleView();
+				MapTitleView(this, VirtualView);
 		}
 
 		void OnElementAppearing(object sender, EventArgs e)
 		{
 			UpdateTitleVisible();
 			UpdateBackButton();
-		}
-
-		void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
-		{
-			if (e.PropertyName == NavigationPage.BarTextColorProperty.PropertyName)
-				UpdateTitleColor();
-			else if (e.PropertyName == NavigationPage.BarBackgroundColorProperty.PropertyName)
-				UpdateNavigationBarBackgroundColor();
-			else if (e.PropertyName == NavigationPage.BarBackgroundProperty.PropertyName)
-				UpdateNavigationBarBackground();
-			else if (e.PropertyName == Page.PaddingProperty.PropertyName)
-				UpdatePadding();
-			else if (e.PropertyName == ToolbarPlacementProperty.PropertyName)
-				UpdateToolbarPlacement();
-			else if (e.PropertyName == ToolbarDynamicOverflowEnabledProperty.PropertyName)
-				UpdateToolbarDynamicOverflowEnabled();
-			else if (e.PropertyName == NavigationPage.TitleIconImageSourceProperty.PropertyName)
-				UpdateTitleIcon();
-			else if (e.PropertyName == NavigationPage.TitleViewProperty.PropertyName)
-				UpdateTitleView();
 		}
 
 		void OnLoaded(object sender, RoutedEventArgs args)
@@ -484,8 +410,8 @@ namespace Microsoft.Maui.Controls.Handlers
 
 			if (_parentFlyoutPage != null)
 			{
-				UpdateTitleView();
-				UpdateTitleIcon();
+				MapTitleView(this, VirtualView);
+				MapTitleIcon(this, VirtualView);
 			}
 		}
 
@@ -573,7 +499,7 @@ namespace Microsoft.Maui.Controls.Handlers
 
 			UpdateTitleVisible();
 			UpdateTitleOnParents();
-			UpdateTitleView();
+			MapTitleView(this, VirtualView);
 
 			SetupPageTransition(_transition, isAnimated, isPopping);
 
@@ -615,16 +541,6 @@ namespace Microsoft.Maui.Controls.Handlers
 			VirtualView.ContainerArea = new Rectangle(0, 0, NativeView.ContentWidth, NativeView.ContentHeight);
 		}
 
-		void UpdateNavigationBarBackgroundColor()
-		{
-			(this as ITitleProvider).BarBackgroundBrush = GetBarBackgroundColorBrush();
-		}
-
-		void UpdateNavigationBarBackground()
-		{
-			(this as ITitleProvider).BarBackgroundBrush = GetBarBackgroundBrush();
-		}
-
 		void UpdateTitleVisible()
 		{
 			UpdateTitleOnParents();
@@ -640,95 +556,6 @@ namespace Microsoft.Maui.Controls.Handlers
 			NativeView.UpdateLayout();
 			UpdateContainerArea();
 		}
-
-		void UpdatePadding()
-		{
-			NativeView.TitleInset = VirtualView.Padding.Left;
-		}
-
-		void UpdateTitleColor()
-		{
-			(this as ITitleProvider).BarForegroundBrush = GetBarForegroundBrush();
-		}
-
-		async void UpdateTitleIcon()
-		{
-			if (_currentPage == null)
-				return;
-
-			ImageSource source = NavigationPage.GetTitleIconImageSource(_currentPage);
-
-			TitleIcon = await source.ToWindowsImageSourceAsync();
-
-			NativeView.TitleIcon = TitleIcon;
-
-
-			// TODO MAUI Flyout Page
-			//if (_parentFlyoutPage != null && Platform.GetRenderer(_parentFlyoutPage) is ITitleIconProvider parent)
-			//	parent.TitleIcon = _titleIcon;
-
-			NativeView.UpdateLayout();
-			UpdateContainerArea();
-		}
-
-		void UpdateTitleView()
-		{
-			// if the life cycle hasn't reached the point where _parentFlyoutPage gets wired up then 
-			// don't update the title view
-			if (_currentPage == null || !_parentsLookedUp)
-				return;
-
-			// If the container TitleView gets initialized before the FP TitleView it causes the 
-			// FP TitleView to not render correctly
-			if (_parentFlyoutPage != null)
-			{
-				// TODO MAUI FLYOUT PAGE
-				//if (Platform.GetRenderer(_parentFlyoutPage) is ITitleViewProvider parent)
-				//	parent.TitleView = TitleView;
-			}
-			else if (_parentFlyoutPage == null)
-				NativeView.TitleView = TitleView;
-
-		}
-
-		//SystemNavigationManager _navManager;
-
-		public void BindForegroundColor(AppBar appBar)
-		{
-			SetAppBarForegroundBinding(appBar);
-		}
-
-		public void BindForegroundColor(AppBarButton button)
-		{
-			SetAppBarForegroundBinding(button);
-		}
-
-		void SetAppBarForegroundBinding(FrameworkElement element)
-		{
-			element.SetBinding(Control.ForegroundProperty,
-				new Microsoft.UI.Xaml.Data.Binding { Path = new PropertyPath("TitleBrush"), Source = NativeView, RelativeSource = new RelativeSource { Mode = RelativeSourceMode.TemplatedParent } });
-		}
-
-		void UpdateToolbarPlacement()
-		{
-			if (NativeView == null)
-			{
-				return;
-			}
-
-			NativeView.ToolbarPlacement = VirtualView.OnThisPlatform().GetToolbarPlacement();
-		}
-
-		void UpdateToolbarDynamicOverflowEnabled()
-		{
-			if (NativeView == null)
-			{
-				return;
-			}
-
-			NativeView.ToolbarDynamicOverflowEnabled = VirtualView.OnThisPlatform().GetToolbarDynamicOverflowEnabled();
-		}
-		
 
 		void UpdateShowTitle()
 		{
@@ -760,18 +587,16 @@ namespace Microsoft.Maui.Controls.Handlers
 			ITitleProvider render = null;
 			if (_parentTabbedPage != null)
 			{
-				// TODO MAUI TABBED PAGE
-				//render = Platform.GetRenderer(_parentTabbedPage) as ITitleProvider;
-				//if (render != null)
-				//	render.ShowTitle = (_parentTabbedPage.CurrentPage == VirtualView) && NavigationPage.GetHasNavigationBar(_currentPage);
+				render = _parentTabbedPage.Handler as ITitleProvider;
+				if (render != null)
+					render.ShowTitle = (_parentTabbedPage.CurrentPage == VirtualView) && NavigationPage.GetHasNavigationBar(_currentPage);
 			}
 
 			if (_parentFlyoutPage != null)
 			{
-				// TODO MAUI FLYOUT PAGE
-				//render = Platform.GetRenderer(_parentFlyoutPage) as ITitleProvider;
-				//if (render != null)
-				//	render.ShowTitle = (_parentFlyoutPage.Detail == VirtualView) && NavigationPage.GetHasNavigationBar(_currentPage);
+				render = _parentFlyoutPage.Handler as ITitleProvider;
+				if (render != null)
+					render.ShowTitle = (_parentFlyoutPage.Detail == VirtualView) && NavigationPage.GetHasNavigationBar(_currentPage);
 			}
 
 			if (render != null && render.ShowTitle)
@@ -779,11 +604,11 @@ namespace Microsoft.Maui.Controls.Handlers
 				render.Title = _currentPage.Title;
 
 				if (!Brush.IsNullOrEmpty(VirtualView.BarBackground))
-					render.BarBackgroundBrush = GetBarBackgroundBrush();
+					render.BarBackgroundBrush = GetBarBackgroundBrush(VirtualView);
 				else
 					render.BarBackgroundBrush = GetBarBackgroundColorBrush();
 
-				render.BarForegroundBrush = GetBarForegroundBrush();
+				render.BarForegroundBrush = GetBarForegroundBrush(VirtualView);
 			}
 
 			if (_showTitle || (render != null && render.ShowTitle))
@@ -794,6 +619,80 @@ namespace Microsoft.Maui.Controls.Handlers
 				//	await Platform.UpdateToolbarItems();
 				//}
 			}
+		}
+
+		public static void MapPadding(NavigationPageHandler handler, NavigationPage view)
+		{
+			handler.NativeView.TitleInset = view.Padding.Left;
+		}
+
+		public static void MapTitleColor(NavigationPageHandler handler, NavigationPage view)
+		{
+			(handler as ITitleProvider).BarForegroundBrush = GetBarForegroundBrush(view);
+		}
+
+		public static void MapNavigationBarBackground(NavigationPageHandler handler, NavigationPage view)
+		{
+			(handler as ITitleProvider).BarBackgroundBrush = GetBarBackgroundBrush(view);
+		}
+
+		// TODO MAUI: Task Based Mappers?
+		public static async void MapTitleIcon(NavigationPageHandler handler, NavigationPage view)
+		{
+			if (handler._currentPage == null)
+				return;
+
+			ImageSource source = NavigationPage.GetTitleIconImageSource(handler._currentPage);
+
+			handler.TitleIcon = await source.ToWindowsImageSourceAsync();
+			handler.NativeView.TitleIcon = handler.TitleIcon;
+
+			// TODO MAUI Flyout Page
+			//if (_parentFlyoutPage != null && Platform.GetRenderer(_parentFlyoutPage) is ITitleIconProvider parent)
+			//	parent.TitleIcon = _titleIcon;
+
+			handler.NativeView.UpdateLayout();
+			handler.UpdateContainerArea();
+		}
+
+		public static void MapTitleView(NavigationPageHandler handler, NavigationPage view)
+		{
+			// if the life cycle hasn't reached the point where _parentFlyoutPage gets wired up then 
+			// don't update the title view
+			if (handler._currentPage == null || !handler._parentsLookedUp)
+				return;
+
+			// If the container TitleView gets initialized before the FP TitleView it causes the 
+			// FP TitleView to not render correctly
+			if (handler._parentFlyoutPage != null)
+			{
+				// TODO MAUI FLYOUT PAGE
+				//if (Platform.GetRenderer(_parentFlyoutPage) is ITitleViewProvider parent)
+				//	parent.TitleView = TitleView;
+			}
+			else if (handler._parentFlyoutPage == null)
+				handler.NativeView.TitleView = handler.TitleView;
+
+		}
+
+		public static void MapToolbarPlacement(NavigationPageHandler handler, NavigationPage view)
+		{
+			if (handler.NativeView == null)
+			{
+				return;
+			}
+
+			handler.NativeView.ToolbarPlacement = view.OnThisPlatform().GetToolbarPlacement();
+		}
+
+		public static void MapToolbarDynamicOverflowEnabled(NavigationPageHandler handler, NavigationPage view)
+		{
+			if (handler.NativeView == null)
+			{
+				return;
+			}
+
+			handler.NativeView.ToolbarDynamicOverflowEnabled = view.OnThisPlatform().GetToolbarDynamicOverflowEnabled();
 		}
 	}
 }
