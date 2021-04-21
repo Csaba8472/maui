@@ -16,8 +16,9 @@ namespace Microsoft.Maui.Controls.Platform
 		static ImageConverter _imageConverter = new ImageConverter();
 		static ImageSourceIconElementConverter _imageSourceIconElementConverter = new ImageSourceIconElementConverter();
 
-		static internal async Task UpdateToolbarItems(Page page)
+		static internal async Task UpdateToolbarItems(NavigationPage page)
 		{
+			_toolbarTracker.Target = page.CurrentPage;
 			var toolbarProvider = GetToolbarProvider(page);
 
 			if (toolbarProvider == null)
@@ -56,8 +57,7 @@ namespace Microsoft.Maui.Controls.Platform
 					button.Content = img;
 				}
 
-				// TODO WINUI FIX
-				//button.Command = new MenuItemCommand(item);
+				button.Command = new MenuItemCommand(item);
 				button.DataContext = item;
 				button.SetValue(NativeAutomationProperties.AutomationIdProperty, item.AutomationId);
 				button.SetAutomationPropertiesName(item);

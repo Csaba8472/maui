@@ -13,14 +13,6 @@ using Debug = System.Diagnostics.Debug;
 
 namespace Maui.Controls.Sample.Pages
 {
-	public class NavPage : NavigationPage
-	{
-		public NavPage(IServiceProvider services, MainPageViewModel viewModel) :
-			base(new MainPage(services, viewModel))
-		{
-		}
-	}
-
 	public class MainPage : BasePage
 	{
 		readonly IServiceProvider _services;
@@ -28,6 +20,11 @@ namespace Maui.Controls.Sample.Pages
 
 		public MainPage(IServiceProvider services, MainPageViewModel viewModel)
 		{
+			ToolbarItems.Add(new ToolbarItem()
+			{
+				Text = "Page"
+			});
+
 			Title = "Welcome to the Samples";
 			_services = services;
 			BindingContext = _viewModel = viewModel;
