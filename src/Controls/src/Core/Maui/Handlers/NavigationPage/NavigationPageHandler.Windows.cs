@@ -619,11 +619,8 @@ namespace Microsoft.Maui.Controls.Handlers
 
 			if (_showTitle || (render != null && render.ShowTitle))
 			{
-				// TODO MAUI
-				//if (Platform != null)
-				//{
-				//	await Platform.UpdateToolbarItems();
-				//}
+				ToolbarManager.UpdateToolbarItems(VirtualView)
+					.FireAndForget((e)=> Log.Warning(nameof(NavigationPage), $"{e}"));
 			}
 		}
 

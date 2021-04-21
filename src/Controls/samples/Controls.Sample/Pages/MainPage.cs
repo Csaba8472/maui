@@ -28,6 +28,7 @@ namespace Maui.Controls.Sample.Pages
 
 		public MainPage(IServiceProvider services, MainPageViewModel viewModel)
 		{
+			Title = "Welcome to the Samples";
 			_services = services;
 			BindingContext = _viewModel = viewModel;
 
