@@ -282,7 +282,7 @@ namespace Microsoft.Maui.Controls
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static bool IsApplicationOrNull(Element element)
 		{
-			return IsApplicationOrNull(element as IView);
+			return element == null || element is Application;
 		}
 
 		internal static bool IsApplicationOrNull(IView element)
