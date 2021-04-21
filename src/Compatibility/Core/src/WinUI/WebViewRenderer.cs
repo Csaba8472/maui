@@ -14,9 +14,6 @@ using Microsoft.UI.Xaml.Controls;
 using WWebView = Microsoft.UI.Xaml.Controls.WebView2;
 using Microsoft.Maui.Controls.Platform;
 
-//TODO WINUI3
-//using WWebViewExecutionMode = Microsoft.UI.Xaml.Controls.WebViewExecutionMode;
-
 namespace Microsoft.Maui.Controls.Compatibility.Platform.UWP
 {
 	public class WebViewRenderer : ViewRenderer<WebView, WebView2>, IWebViewDelegate

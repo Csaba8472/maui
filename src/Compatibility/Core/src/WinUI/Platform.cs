@@ -556,14 +556,16 @@ namespace Microsoft.Maui.Controls.Compatibility.Platform.UWP
 					button.Content = img;
 				}
 
-				// WINUUI FIX
+				// TODO WINUI FIX
 				//button.Command = new MenuItemCommand(item);
 				button.DataContext = item;
 				button.SetValue(NativeAutomationProperties.AutomationIdProperty, item.AutomationId);
 				button.SetAutomationPropertiesName(item);
 				button.SetAutomationPropertiesAccessibilityView(item);
 				button.SetAutomationPropertiesHelpText(item);
-				button.SetAutomationPropertiesLabeledBy(item);
+
+				// TODO MAUI
+				button.SetAutomationPropertiesLabeledBy(item, null);
 
 				ToolbarItemOrder order = item.Order == ToolbarItemOrder.Default ? ToolbarItemOrder.Primary : item.Order;
 				if (order == ToolbarItemOrder.Primary)

@@ -435,7 +435,8 @@ namespace Microsoft.Maui.Controls.Compatibility.Platform.UWP
 			if (Control == null)
 				return;
 
-			_defaultAutomationPropertiesLabeledBy = Control.SetAutomationPropertiesLabeledBy(Element, _defaultAutomationPropertiesLabeledBy);
+			// TODO MAUI
+			_defaultAutomationPropertiesLabeledBy = Control.SetAutomationPropertiesLabeledBy(Element, null, _defaultAutomationPropertiesLabeledBy);
 		}
 
 		protected void SetNativeControl(TNativeElement control)

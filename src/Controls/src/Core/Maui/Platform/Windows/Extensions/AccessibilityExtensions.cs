@@ -69,29 +69,33 @@ namespace Microsoft.Maui.Controls.Platform
 			return _defaultAutomationPropertiesHelpText;
 		}
 
-		public static UIElement SetAutomationPropertiesLabeledBy(this FrameworkElement Control, Element Element, UIElement _defaultAutomationPropertiesLabeledBy = null)
+		public static UIElement SetAutomationPropertiesLabeledBy(
+			this FrameworkElement Control, 
+			Element Element,
+			IMauiContext mauiContext,
+			UIElement _defaultAutomationPropertiesLabeledBy = null)
 		{
-			// TODO MAUI
-			return null;
-			
-			//if (Element == null)
-			//	return _defaultAutomationPropertiesLabeledBy;
+			if (Element == null)
+				return _defaultAutomationPropertiesLabeledBy;
 
-			//if (_defaultAutomationPropertiesLabeledBy == null)
-			//	_defaultAutomationPropertiesLabeledBy = (UIElement)Control.GetValue(NativeAutomationProperties.LabeledByProperty);
+			mauiContext ??= (Element as IView).Handler?.MauiContext;
 
-			//var elemValue = (VisualElement)Element.GetValue(AutomationProperties.LabeledByProperty);
+			if (_defaultAutomationPropertiesLabeledBy == null)
+				_defaultAutomationPropertiesLabeledBy = (UIElement)Control.GetValue(NativeAutomationProperties.LabeledByProperty);
 
-			//var renderer = elemValue?.ToNativeView();
+			var elemValue = (VisualElement)Element.GetValue(AutomationProperties.LabeledByProperty);
 
-			//var nativeElement = renderer?.GetNativeElement();
+			FrameworkElement nativeElement = null;
 
-			//if (nativeElement != null)
-			//	Control.SetValue(AutomationProperties.LabeledByProperty, nativeElement);
-			//else
-			//	Control.SetValue(NativeAutomationProperties.LabeledByProperty, _defaultAutomationPropertiesLabeledBy);
+			if(mauiContext != null)
+				nativeElement = (elemValue as IView)?.GetOrCreateHandler(mauiContext)?.NativeView as FrameworkElement;
 
-			//return _defaultAutomationPropertiesLabeledBy;
+			if (nativeElement != null)
+				Control.SetValue(AutomationProperties.LabeledByProperty, nativeElement);
+			else
+				Control.SetValue(NativeAutomationProperties.LabeledByProperty, _defaultAutomationPropertiesLabeledBy);
+
+			return _defaultAutomationPropertiesLabeledBy;
 		}
 
 		// TODO MAUI: This is not having any effect on anything I've tested yet. See if we need it  
@@ -129,12 +133,13 @@ namespace Microsoft.Maui.Controls.Platform
 		public static void SetAutomationProperties(
 			this FrameworkElement frameworkElement, 
 			Element element,
+			IMauiContext mauiContext,
 			string defaultName = null)
 		{
 			frameworkElement.SetAutomationPropertiesAutomationId(element?.AutomationId);
 			 frameworkElement.SetAutomationPropertiesName(element, defaultName);
 			frameworkElement.SetAutomationPropertiesHelpText(element);
-			frameworkElement.SetAutomationPropertiesLabeledBy(element);
+			frameworkElement.SetAutomationPropertiesLabeledBy(element, mauiContext);
 			frameworkElement.SetAutomationPropertiesAccessibilityView(element);
 		}
 	}
