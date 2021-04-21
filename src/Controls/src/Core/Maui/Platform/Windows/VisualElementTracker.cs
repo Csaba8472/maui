@@ -23,6 +23,7 @@ using Microsoft.Maui.Graphics;
 
 namespace Microsoft.Maui.Controls.Platform
 {
+	// TODO MAUI: can we convert this over to using IView
 	public class VisualElementTracker<TElement, TNativeElement> : IDisposable where TElement : VisualElement where TNativeElement : FrameworkElement
 	{
 		readonly NotifyCollectionChangedEventHandler _collectionChangedHandler;
