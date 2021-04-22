@@ -4,7 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.StartScreen;
+
+#if WINDOWS
 using Microsoft.UI.Xaml;
+#endif
 
 namespace Microsoft.Maui.Essentials
 {

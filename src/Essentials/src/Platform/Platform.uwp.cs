@@ -1,4 +1,6 @@
+#if WINDOWS
 using Microsoft.UI.Xaml;
+#endif
 
 namespace Microsoft.Maui.Essentials
 {
