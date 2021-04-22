@@ -4,12 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.StartScreen;
-
-#if WINDOWS
-using Windows.ApplicationModel.Activation;
-#elif WINDOWS
 using Microsoft.UI.Xaml;
-#endif
 
 namespace Microsoft.Maui.Essentials
 {
