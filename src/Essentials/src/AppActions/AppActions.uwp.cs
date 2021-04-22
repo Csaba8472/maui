@@ -4,7 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.StartScreen;
+
+#if WINDOWS_UWP
+using Windows.ApplicationModel.Activation;
+#elif WINDOWS
 using Microsoft.UI.Xaml;
+#endif
 
 namespace Microsoft.Maui.Essentials
 {
@@ -22,12 +27,14 @@ namespace Microsoft.Maui.Essentials
 		internal static async Task OnLaunched(LaunchActivatedEventArgs e)
 		{
 			var args = e?.Arguments;
-            if (string.IsNullOrEmpty(args))
-            {
-                var cliArgs = Environment.GetCommandLineArgs();
-                if (cliArgs?.Length > 1)
-                    args = cliArgs[1];
-            }
+#if !WINDOWS_UWP
+			if (string.IsNullOrEmpty(args))
+			{
+				var cliArgs = Environment.GetCommandLineArgs();
+				if (cliArgs?.Length > 1)
+					args = cliArgs[1];
+			}
+#endif
 
 			if (args?.StartsWith(appActionPrefix) ?? false)
 			{
