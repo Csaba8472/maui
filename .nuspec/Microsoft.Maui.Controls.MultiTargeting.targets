@@ -34,6 +34,8 @@
     <None Include="**\*.Windows.cs" />
     <Compile Remove="**\Windows\**\*.cs" />
     <None Include="**\Windows\**\*.cs" />
+    <Compile Remove="**\*.uwp.cs" />
+    <None Include="**\*.uwp.cs" />
   </ItemGroup>
 
   <PropertyGroup>
