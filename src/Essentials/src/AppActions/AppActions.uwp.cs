@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.StartScreen;
 
-#if WINDOWS_UWP
+#if WINDOWS
 using Windows.ApplicationModel.Activation;
 #elif WINDOWS
 using Microsoft.UI.Xaml;
@@ -27,7 +27,7 @@ namespace Microsoft.Maui.Essentials
 		internal static async Task OnLaunched(LaunchActivatedEventArgs e)
 		{
 			var args = e?.Arguments;
-#if !WINDOWS_UWP
+#if !WINDOWS
             if (string.IsNullOrEmpty(args))
             {
                 var cliArgs = Environment.GetCommandLineArgs();

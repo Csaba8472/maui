@@ -3,7 +3,7 @@ using Microsoft.Maui.Controls.Shapes;
 using System.Collections.Specialized;
 using Microsoft.Maui.Controls.Platform;
 
-#if WINDOWS_UWP
+#if WINDOWS
 using WFillRule = Microsoft.UI.Xaml.Media.FillRule;
 using WPolyline = Microsoft.UI.Xaml.Shapes.Polyline;
 

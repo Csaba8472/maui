@@ -76,7 +76,7 @@ namespace Microsoft.Maui.Controls.Compatibility.ControlGallery.Issues
 
 			string path;
 
-#if WINDOWS_UWP
+#if WINDOWS
 			path = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
 #else
 			path = Environment.GetFolderPath(Environment.SpecialFolder.Personal);

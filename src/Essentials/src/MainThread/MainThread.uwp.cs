@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-#if WINDOWS_UWP
+#if WINDOWS
 using Windows.ApplicationModel.Core;
 using Windows.UI.Core;
 #elif WINDOWS
@@ -16,7 +16,7 @@ namespace Microsoft.Maui.Essentials
 		{
 			get
 			{
-#if WINDOWS_UWP
+#if WINDOWS
 				// if there is no main window, then this is either a service
 				// or the UI is not yet constructed, so the main thread is the
 				// current thread
@@ -40,7 +40,7 @@ namespace Microsoft.Maui.Essentials
 
 		static void PlatformBeginInvokeOnMainThread(Action action)
 		{
-#if WINDOWS_UWP
+#if WINDOWS
 			var dispatcher = CoreApplication.MainView?.CoreWindow?.Dispatcher;
 
 			if (dispatcher == null)

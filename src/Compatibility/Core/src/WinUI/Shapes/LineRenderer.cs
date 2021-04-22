@@ -2,7 +2,7 @@ using System.ComponentModel;
 using Microsoft.Maui.Controls.Platform;
 using Microsoft.Maui.Controls.Shapes;
 
-#if WINDOWS_UWP
+#if WINDOWS
 using WLine = Microsoft.UI.Xaml.Shapes.Line;
 
 namespace Microsoft.Maui.Controls.Compatibility.Platform.UWP

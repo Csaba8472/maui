@@ -1,4 +1,4 @@
-#if WINDOWS_UWP
+#if WINDOWS
 using Windows.ApplicationModel.Activation;
 #elif WINDOWS
 using Microsoft.UI.Xaml;
